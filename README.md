@@ -36,7 +36,29 @@ The Buddies Inn backend provides the core server-side logic, database integratio
     ```bash
     npm install
     ```
-3. Create a `.env` file and configure your environment variables as needed.
+3. Create a `.env` file in the root of the backend directory with this template:
+
+    ```env
+    # Server Configuration
+    PORT=
+    NODE_ENV=
+    
+    # Database Configuration
+    
+    DATABASE_URL=
+    
+    # JWT Configuration (add when implementing auth)
+    JWT_SECRET=
+    
+    
+    ```
+
+    - `PORT`: The port your server will run on (default: 5000).
+    - `NODE_ENV`: Set to `development` or `production`.
+    - `DATABASE_URL`: (Optional) Your database connection string.
+    - `JWT_SECRET`: (Optional) Secret key for JWT authentication.
+    
+    > Never commit your `.env` file to version control.
 
 4. Start the development server:
     ```bash
