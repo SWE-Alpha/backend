@@ -95,3 +95,5 @@ Thumbs.db
 dist/
 build/
 /generated/prisma
+
+/generated/prisma

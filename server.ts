@@ -1,9 +1,14 @@
-// Import required modules
+
 const express = require('express');
 const testRoute = require('./routes/testRoutes');
+const apiRoutes = require('./routes/api');
+const { testConnection } = require('./utils/db');
 
 // Load environment variables from .env file
 require('dotenv').config();
+
+// Import types for TypeScript
+import { Request, Response, NextFunction } from 'express';
 
 const app = express();
 
@@ -11,15 +16,18 @@ const app = express();
 app.use(express.json());
 
 // Root route - basic server status message
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.send(`🚀 Buddies Inn Backend server running on port ${PORT}.`);
 });
 
 // Mount test routes under /api/test
 app.use('/api/test', testRoute);
 
+// Mount API routes under /api
+app.use('/api', apiRoutes);
+
 // Enhanced health check route for monitoring server status
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
   const uptime = process.uptime();
   const memoryUsage = process.memoryUsage();
   res.status(200).json({
@@ -37,7 +45,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // 404 handler - catches all unknown routes
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   res.status(404).json({
     error: 'Not Found',
     message: `Route ${req.originalUrl} does not exist`
@@ -45,14 +53,14 @@ app.use((req, res, next) => {
 });
 
 // Global error handler - handles invalid JSON and other errors
-app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof SyntaxError && (err as any).status === 400 && 'body' in err) {
     // Handle invalid JSON error
     return res.status(400).json({ error: 'Invalid JSON' });
   }
   // Log error stack and send generic error response
   console.error(err.stack);
-  res.status(500).json({
+  return res.status(500).json({
     error: 'Internal Server Error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
@@ -61,7 +69,28 @@ app.use((err, req, res, next) => {
 // Set server port from environment or default to 3000
 const PORT = process.env.PORT || 3000;
 
-// Start the server and listen on the specified port
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+// Initialize database connection and start server
+const startServer = async () => {
+  try {
+    // Test database connection
+    const dbConnected = await testConnection();
+
+    if (!dbConnected) {
+      console.error('❌ Failed to connect to database. Exiting...');
+      process.exit(1);
+    }
+
+    // Start the server and listen on the specified port
+    app.listen(PORT, () => {
+      console.log(`🚀 Server listening on port ${PORT}`);
+      console.log(`🌐 Server URL: http://localhost:${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', (error as Error).message);
+    process.exit(1);
+  }
+};
+
+// Start the application
+startServer();
