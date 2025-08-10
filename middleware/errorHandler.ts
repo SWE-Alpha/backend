@@ -1,5 +1,6 @@
+import express , { NextFunction, Request, Response } from 'express';
 // Error handling middleware
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err:any, req:Request, res:Response, next:NextFunction) => {
   console.error(err.stack);
 
   // Prisma errors
