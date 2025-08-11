@@ -11,7 +11,8 @@ export const getAllProducts = async (req: Request, res: Response) => {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       status,
-      featured
+      featured,
+      categoryId
     } = req.query as any;
 
     const pageNum = Math.max(1, Number(page));
@@ -24,12 +25,17 @@ export const getAllProducts = async (req: Request, res: Response) => {
       where.status = status;
     }
     if (featured !== undefined) {
-      const f = String(featured).toLowerCase();
-      where.featured = f === 'true' || f === '1';
+      where.featured = String(featured) === 'true';
+    }
+    if (categoryId) {
+      where.categoryId = String(categoryId);
     }
     if (search && String(search).trim() !== '') {
       const q = String(search).trim();
-      where.OR = [{ name: { contains: q, mode: 'insensitive' } }, { description: { contains: q, mode: 'insensitive' } }];
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } }, 
+        { description: { contains: q, mode: 'insensitive' } }
+      ];
     }
 
     const validSort = ['name', 'price', 'stock', 'featured', 'createdAt', 'updatedAt'];
@@ -42,7 +48,13 @@ export const getAllProducts = async (req: Request, res: Response) => {
         skip,
         take: limitNum,
         orderBy: { [safeSortBy]: safeSortOrder },
-        include: { images: true, variants: true }
+        include: { 
+          images: true, 
+          variants: true,
+          category: {
+            select: { id: true, name: true, description: true }
+          }
+        }
       }),
       prisma.product.count({ where })
     ]);
@@ -68,7 +80,13 @@ export const getProductById = async (req: Request, res: Response) => {
     const { id } = req.params;
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { images: true, variants: true }
+      include: { 
+        images: true, 
+        variants: true,
+        category: {
+          select: { id: true, name: true, description: true }
+        }
+      }
     });
     if (!product) return res.status(404).json({ success: false, error: 'product not found' });
 
@@ -81,9 +99,23 @@ export const getProductById = async (req: Request, res: Response) => {
 // POST /api/products
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, price, stock = 0, featured = false, status = 'DRAFT', images = [], variants = [] } = req.body || {};
-    if (!name || !description || price === undefined) {
-      return res.status(400).json({ success: false, error: 'name, description, and price are required' });
+    const { name, description, price, categoryId, stock = 0, featured = false, status = 'DRAFT', images = [], variants = [] } = req.body || {};
+    
+    // Validation
+    if (!name || !description || price === undefined || !categoryId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'name, description, price, and categoryId are required' 
+      });
+    }
+
+    // Verify category exists
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!category) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid categoryId - category does not exist' 
+      });
     }
 
     const product = await prisma.product.create({
@@ -91,11 +123,16 @@ export const createProduct = async (req: Request, res: Response) => {
         name,
         description,
         price,
+        categoryId,
         stock: Number(stock) || 0,
         featured: Boolean(featured),
         status,
         images: images?.length
-          ? { create: images.map((img: any) => ({ url: img.url, altText: img.altText ?? null, sortOrder: img.sortOrder ?? 0 })) }
+          ? { create: images.map((img: any) => ({ 
+              url: img.url, 
+              altText: img.altText ?? null, 
+              sortOrder: img.sortOrder ?? 0 
+            })) }
           : undefined,
         variants: variants?.length
           ? {
@@ -109,11 +146,23 @@ export const createProduct = async (req: Request, res: Response) => {
             }
           : undefined
       },
-      include: { images: true, variants: true }
+      include: { 
+        images: true, 
+        variants: true,
+        category: {
+          select: { id: true, name: true, description: true }
+        }
+      }
     });
 
     return res.status(201).json({ success: true, data: product });
   } catch (err: any) {
+    if (err.code === 'P2003') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid categoryId - category does not exist' 
+      });
+    }
     return res.status(500).json({ success: false, error: 'Failed to create product', message: err.message });
   }
 };
@@ -122,10 +171,21 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, price, stock, featured, status, publishedAt } = req.body || {};
+    const { name, description, price, categoryId, stock, featured, status, publishedAt } = req.body || {};
 
     const exists = await prisma.product.findUnique({ where: { id } });
     if (!exists) return res.status(404).json({ success: false, error: 'product not found' });
+
+    // If categoryId is being updated, verify it exists
+    if (categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: categoryId } });
+      if (!category) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Invalid categoryId - category does not exist' 
+        });
+      }
+    }
 
     const updated = await prisma.product.update({
       where: { id },
@@ -133,16 +193,29 @@ export const updateProduct = async (req: Request, res: Response) => {
         name: name ?? undefined,
         description: description ?? undefined,
         price: price ?? undefined,
+        categoryId: categoryId ?? undefined,
         stock: stock !== undefined ? Number(stock) : undefined,
         featured: featured !== undefined ? Boolean(featured) : undefined,
         status: status ?? undefined,
         publishedAt: publishedAt ?? undefined
       },
-      include: { images: true, variants: true }
+      include: { 
+        images: true, 
+        variants: true,
+        category: {
+          select: { id: true, name: true, description: true }
+        }
+      }
     });
 
     return res.json({ success: true, data: updated });
   } catch (err: any) {
+    if (err.code === 'P2003') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid categoryId - category does not exist' 
+      });
+    }
     return res.status(500).json({ success: false, error: 'Failed to update product', message: err.message });
   }
 };

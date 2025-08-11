@@ -5,6 +5,7 @@ import cartRoutes from './cart';
 import orderRoutes from './orders';
 import authRoutes from './auth';
 import reviewRoutes from './reviews';
+import categoryRoutes from './categories';
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use('/cart', cartRoutes);
 router.use('/orders', orderRoutes);
 router.use('/auth', authRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/categories', categoryRoutes);
 
 module.exports = router;

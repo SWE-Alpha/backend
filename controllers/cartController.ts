@@ -7,7 +7,17 @@ const includeCart = {
   items: {
     include: {
       product: {
-        select: { id: true, name: true, price: true, stock: true, featured: true, status: true }
+        select: { 
+          id: true, 
+          name: true, 
+          price: true, 
+          stock: true, 
+          featured: true, 
+          status: true,
+          category: {
+            select: { id: true, name: true, description: true }
+          }
+        }
       }
     },
     orderBy: { createdAt: 'desc' as const }
