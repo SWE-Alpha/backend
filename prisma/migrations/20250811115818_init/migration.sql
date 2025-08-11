@@ -43,18 +43,7 @@ CREATE TABLE "public"."products" (
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "price" DECIMAL(10,2) NOT NULL,
-    "comparePrice" DECIMAL(10,2),
-    "sku" TEXT NOT NULL,
-    "barcode" TEXT,
     "stock" INTEGER NOT NULL DEFAULT 0,
-    "lowStockThreshold" INTEGER NOT NULL DEFAULT 10,
-    "trackQuantity" BOOLEAN NOT NULL DEFAULT true,
-    "categoryId" TEXT NOT NULL,
-    "brand" TEXT,
-    "tags" TEXT[],
-    "slug" TEXT NOT NULL,
-    "metaTitle" TEXT,
-    "metaDescription" TEXT,
     "featured" BOOLEAN NOT NULL DEFAULT false,
     "status" "public"."ProductStatus" NOT NULL DEFAULT 'DRAFT',
     "publishedAt" TIMESTAMP(3),
@@ -62,24 +51,6 @@ CREATE TABLE "public"."products" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."categories" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "slug" TEXT NOT NULL,
-    "image" TEXT,
-    "parentId" TEXT,
-    "metaTitle" TEXT,
-    "metaDescription" TEXT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "sortOrder" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -216,38 +187,8 @@ CREATE TABLE "public"."reviews" (
     CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "public"."wishlist_items" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "wishlist_items_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."refresh_tokens" (
-    "id" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "products_sku_key" ON "public"."products"("sku");
-
--- CreateIndex
-CREATE UNIQUE INDEX "products_slug_key" ON "public"."products"("slug");
-
--- CreateIndex
-CREATE UNIQUE INDEX "categories_slug_key" ON "public"."categories"("slug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "orders_orderNumber_key" ON "public"."orders"("orderNumber");
@@ -263,18 +204,6 @@ CREATE UNIQUE INDEX "product_variants_sku_key" ON "public"."product_variants"("s
 
 -- CreateIndex
 CREATE UNIQUE INDEX "reviews_userId_productId_key" ON "public"."reviews"("userId", "productId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "wishlist_items_userId_productId_key" ON "public"."wishlist_items"("userId", "productId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "refresh_tokens_token_key" ON "public"."refresh_tokens"("token");
-
--- AddForeignKey
-ALTER TABLE "public"."products" ADD CONSTRAINT "products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."categories" ADD CONSTRAINT "categories_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "public"."categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."orders" ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -308,12 +237,3 @@ ALTER TABLE "public"."reviews" ADD CONSTRAINT "reviews_userId_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "public"."reviews" ADD CONSTRAINT "reviews_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."wishlist_items" ADD CONSTRAINT "wishlist_items_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."wishlist_items" ADD CONSTRAINT "wishlist_items_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."refresh_tokens" ADD CONSTRAINT "refresh_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
