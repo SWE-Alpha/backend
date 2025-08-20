@@ -26,7 +26,7 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
     res.status(400).json({
       error: 'Validation Error',
       message: err.message,
-      details: err.details
+      details: err.details || []
     });
     return;
   }
@@ -40,7 +40,7 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
 
 // Request validation middleware
 const validateRequest = (schema: any) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const { error } = schema.validate(req.body);
     if (error) {
       const validationError: any = new Error(error.details[0].message);
@@ -54,7 +54,7 @@ const validateRequest = (schema: any) => {
 
 // Async wrapper to catch errors in async route handlers
 const asyncHandler = (fn: any) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };

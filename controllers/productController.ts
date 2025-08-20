@@ -1,6 +1,75 @@
 import { Request, Response } from 'express';
 const { prisma } = require('../utils/db');
 
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Get all products
+ *     description: Retrieve a paginated list of products with filtering options
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for product name or description
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [name, price, stock, featured, createdAt, updatedAt]
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [DRAFT, ACTIVE, ARCHIVED, OUT_OF_STOCK]
+ *         description: Filter by product status
+ *       - in: query
+ *         name: featured
+ *         schema:
+ *           type: boolean
+ *         description: Filter by featured products
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: string
+ *         description: Filter by category ID
+ *     responses:
+ *       200:
+ *         description: Products retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginationResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // GET /api/products
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
@@ -74,6 +143,47 @@ export const getAllProducts = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/products/{productId}:
+ *   get:
+ *     summary: Get product by ID
+ *     description: Retrieve detailed information about a specific product
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         description: Unique identifier of the product
+ *         schema:
+ *           type: string
+ *           example: "product_123456789"
+ *     responses:
+ *       200:
+ *         description: Product retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // GET /api/products/:id
 export const getProductById = async (req: Request, res: Response) => {
   try {
@@ -96,6 +206,119 @@ export const getProductById = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/products:
+ *   post:
+ *     summary: Create new product
+ *     description: Create a new product with images and variants
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - description
+ *               - price
+ *               - categoryId
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Wireless Bluetooth Headphones"
+ *               description:
+ *                 type: string
+ *                 example: "High-quality wireless headphones with noise cancellation"
+ *               price:
+ *                 type: number
+ *                 format: decimal
+ *                 example: 99.99
+ *               categoryId:
+ *                 type: string
+ *                 example: "category_123456789"
+ *               stock:
+ *                 type: integer
+ *                 default: 0
+ *                 example: 50
+ *               featured:
+ *                 type: boolean
+ *                 default: false
+ *                 example: true
+ *               status:
+ *                 type: string
+ *                 enum: [DRAFT, ACTIVE, ARCHIVED, OUT_OF_STOCK]
+ *                 default: DRAFT
+ *                 example: "ACTIVE"
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                       example: "https://example.com/image.jpg"
+ *                     altText:
+ *                       type: string
+ *                       example: "Product image"
+ *                     sortOrder:
+ *                       type: integer
+ *                       example: 0
+ *               variants:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Color"
+ *                     value:
+ *                       type: string
+ *                       example: "Black"
+ *                     price:
+ *                       type: number
+ *                       example: 109.99
+ *                     stock:
+ *                       type: integer
+ *                       example: 25
+ *                     sku:
+ *                       type: string
+ *                       example: "WBH-BLK-001"
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request - missing required fields or invalid category
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // POST /api/products
 export const createProduct = async (req: Request, res: Response) => {
   try {
@@ -167,6 +390,147 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/products/{productId}:
+ *   put:
+ *     summary: Update product
+ *     description: Update an existing product's information
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         description: Unique identifier of the product to update
+ *         schema:
+ *           type: string
+ *           example: "product_123456789"
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Product Name"
+ *               description:
+ *                 type: string
+ *                 example: "Updated product description"
+ *               price:
+ *                 type: number
+ *                 format: decimal
+ *                 example: 129.99
+ *               categoryId:
+ *                 type: string
+ *                 example: "category_987654321"
+ *               stock:
+ *                 type: integer
+ *                 example: 75
+ *               featured:
+ *                 type: boolean
+ *                 example: false
+ *               status:
+ *                 type: string
+ *                 enum: [DRAFT, ACTIVE, ARCHIVED, OUT_OF_STOCK]
+ *                 example: "ACTIVE"
+ *               publishedAt:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2024-01-15T10:30:00Z"
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Bad request - invalid category ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: Delete product
+ *     description: Delete a product (only if not referenced by orders)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         description: Unique identifier of the product to delete
+ *         schema:
+ *           type: string
+ *           example: "product_123456789"
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "product deleted"
+ *       400:
+ *         description: Bad request - product is referenced by orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // PUT /api/products/:id
 export const updateProduct = async (req: Request, res: Response) => {
   try {

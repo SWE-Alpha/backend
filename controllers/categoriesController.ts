@@ -1,6 +1,35 @@
 import { Request, Response } from 'express';
 const { prisma } = require('../utils/db');
 
+/**
+ * @swagger
+ * /api/categories:
+ *   get:
+ *     summary: Get all categories
+ *     description: Retrieve a list of all product categories
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: Categories retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Category'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // GET /api/categories
 export const getCategories = async (req: Request, res: Response) => {
   try {
@@ -18,6 +47,46 @@ export const getCategories = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   get:
+ *     summary: Get category by ID
+ *     description: Retrieve a specific category with its products
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Category ID
+ *     responses:
+ *       200:
+ *         description: Category retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Category'
+ *       404:
+ *         description: Category not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // GET /api/categories/:id
 export const getCategoryById = async (req: Request, res: Response) => {
   try {
@@ -41,6 +110,76 @@ export const getCategoryById = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/categories:
+ *   post:
+ *     summary: Create a new category
+ *     description: Create a new product category (requires authentication)
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Category name
+ *                 example: "Electronics"
+ *               description:
+ *                 type: string
+ *                 description: Category description
+ *                 example: "Electronic devices and accessories"
+ *               image:
+ *                 type: string
+ *                 description: Category image URL
+ *                 example: "https://example.com/electronics.jpg"
+ *               sortOrder:
+ *                 type: integer
+ *                 description: Sort order for display
+ *                 example: 1
+ *               isActive:
+ *                 type: boolean
+ *                 description: Whether category is active
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: Category created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Category'
+ *       400:
+ *         description: Bad request - missing name or name already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // POST /api/categories
 export const createCategory = async (req: Request, res: Response) => {
   try {
@@ -58,6 +197,129 @@ export const createCategory = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/categories/{id}:
+ *   put:
+ *     summary: Update category
+ *     description: Update an existing category's information
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Category ID to update
+ *         schema:
+ *           type: string
+ *           example: "category_123456789"
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Electronics"
+ *               description:
+ *                 type: string
+ *                 example: "Updated description for electronics category"
+ *               image:
+ *                 type: string
+ *                 example: "https://example.com/updated-electronics.jpg"
+ *               sortOrder:
+ *                 type: integer
+ *                 example: 2
+ *               isActive:
+ *                 type: boolean
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Category updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Category'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Category not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: Delete category
+ *     description: Delete a category (only if it has no products)
+ *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Category ID to delete
+ *         schema:
+ *           type: string
+ *           example: "category_123456789"
+ *     responses:
+ *       200:
+ *         description: Category deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Category deleted"
+ *       400:
+ *         description: Bad request - category has products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Category not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // PUT /api/categories/:id
 export const updateCategory = async (req: Request, res: Response) => {
   try {

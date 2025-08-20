@@ -3,6 +3,111 @@ const { prisma } = require('../utils/db');
 
 type AuthedRequest = Request & { user?: { id: string } };
 
+/**
+ * @swagger
+ * /api/products/{productId}/reviews:
+ *   get:
+ *     summary: Get product reviews
+ *     description: Retrieve all approved reviews for a specific product
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         description: Unique identifier of the product
+ *         schema:
+ *           type: string
+ *           example: "product_123456789"
+ *     responses:
+ *       200:
+ *         description: Reviews retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Review'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: Create product review
+ *     description: Create a new review for a product (one review per user per product)
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         description: Unique identifier of the product to review
+ *         schema:
+ *           type: string
+ *           example: "product_123456789"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 5
+ *                 description: Rating from 1 to 5 stars
+ *               title:
+ *                 type: string
+ *                 example: "Great product!"
+ *                 description: Optional review title
+ *               comment:
+ *                 type: string
+ *                 example: "This product exceeded my expectations. Highly recommended!"
+ *                 description: Optional detailed review comment
+ *     responses:
+ *       201:
+ *         description: Review created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Review'
+ *       400:
+ *         description: Bad request - invalid rating or user already reviewed this product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // GET /api/products/:productId/reviews
 export const getProductReviews = async (req: Request, res: Response) => {
   try {
@@ -61,6 +166,56 @@ export const createReview = async (req: AuthedRequest, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/reviews/{reviewId}:
+ *   delete:
+ *     summary: Delete review
+ *     description: Delete a review (users can only delete their own reviews)
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         description: Unique identifier of the review to delete
+ *         schema:
+ *           type: string
+ *           example: "review_123456789"
+ *     responses:
+ *       200:
+ *         description: Review deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "review deleted"
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Review not found or doesn't belong to user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // DELETE /api/reviews/:id
 export const deleteReview = async (req: AuthedRequest, res: Response) => {
   try {

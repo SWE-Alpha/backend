@@ -47,6 +47,41 @@ async function recalcCart(cartId: string) {
   return prisma.cart.findUnique({ where: { id: cartId }, include: includeCart });
 }
 
+/**
+ * @swagger
+ * /api/cart:
+ *   get:
+ *     summary: Get user's shopping cart
+ *     description: Retrieve the current user's shopping cart with all items
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Cart'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // GET /api/cart
 export const getCart = async (req: AuthedRequest, res: Response) => {
   console.log('\n🛒 === GET CART REQUEST ===');
@@ -72,6 +107,75 @@ export const getCart = async (req: AuthedRequest, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/cart/items:
+ *   post:
+ *     summary: Add item to cart
+ *     description: Add a product to the user's shopping cart or update quantity if already exists
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 description: ID of the product to add
+ *                 example: "clp123abc456def789"
+ *               quantity:
+ *                 type: integer
+ *                 minimum: 1
+ *                 default: 1
+ *                 description: Quantity of the product to add
+ *                 example: 2
+ *     responses:
+ *       200:
+ *         description: Item added to cart successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Cart'
+ *                 message:
+ *                   type: string
+ *                   example: "item added"
+ *       400:
+ *         description: Bad request - missing productId, product not active, or insufficient stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // POST /api/cart/items
 export const addItem = async (req: AuthedRequest, res: Response) => {
   console.log('\n🛒 === ADD ITEM TO CART REQUEST ===');
@@ -157,6 +261,126 @@ export const addItem = async (req: AuthedRequest, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/cart/items/{itemId}:
+ *   put:
+ *     summary: Update cart item quantity
+ *     description: Update the quantity of a specific item in the user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Cart item ID
+ *         example: "clp123abc456def789"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - quantity
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: New quantity for the cart item
+ *                 example: 3
+ *     responses:
+ *       200:
+ *         description: Cart item updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Cart'
+ *                 message:
+ *                   type: string
+ *                   example: "item updated"
+ *       400:
+ *         description: Bad request - invalid quantity or insufficient stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Cart item not found or unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   delete:
+ *     summary: Remove item from cart
+ *     description: Remove a specific item from the user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Cart item ID
+ *         example: "clp123abc456def789"
+ *     responses:
+ *       200:
+ *         description: Cart item removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Cart'
+ *                 message:
+ *                   type: string
+ *                   example: "item removed"
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Cart item not found or unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // PUT /api/cart/items/:itemId
 export const updateItem = async (req: AuthedRequest, res: Response) => {
   console.log('\n🛒 === UPDATE CART ITEM REQUEST ===');
@@ -247,6 +471,44 @@ export const removeItem = async (req: AuthedRequest, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/cart:
+ *   delete:
+ *     summary: Clear entire cart
+ *     description: Remove all items from the user's shopping cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Cart'
+ *                 message:
+ *                   type: string
+ *                   example: "cart cleared"
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 // DELETE /api/cart
 export const clearCart = async (req: AuthedRequest, res: Response) => {
   console.log('\n🛒 === CLEAR CART REQUEST ===');

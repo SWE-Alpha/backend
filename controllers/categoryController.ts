@@ -1,1 +1,0 @@
-console.log("Category Controller Loaded");
