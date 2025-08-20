@@ -13,6 +13,7 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
     return;
   }
 
+  
   if (err.code === 'P2025') {
     res.status(404).json({
       error: 'Not found',
