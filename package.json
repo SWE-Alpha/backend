@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
+    "postinstall": "prisma generate",
     "build:watch": "tsc --watch",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",

@@ -118,13 +118,29 @@ try {
   log('error', 'Failed to mount API routes:', error);
 }
 
+// Simple health check that doesn't require database
+app.get('/health-simple', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Enhanced health check route for monitoring server status
 app.get('/api/health', asyncHandler(async (req: Request, res: Response) => {
   const startTime = Date.now();
   
   try {
-    // Test database connection
-    const dbStatus = await testConnection();
+    // Test database connection with timeout
+    const dbStatus = await Promise.race([
+      testConnection(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 5000)
+      )
+    ]) as boolean;
+    
     const responseTime = Date.now() - startTime;
     
     const healthInfo = {
@@ -228,15 +244,26 @@ const startServer = async () => {
   try {
     log('info', '🔌 Attempting database connection...');
     
-    // Test database connection
-    const dbConnected = await testConnection();
-
-    if (!dbConnected) {
-      log('error', '❌ Failed to connect to database. Exiting...');
-      process.exit(1);
+    // Test database connection with timeout for serverless
+    let dbConnected = false;
+    try {
+      dbConnected = await Promise.race([
+        testConnection(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+        )
+      ]) as boolean;
+    } catch (dbError) {
+      log('warn', '⚠️ Database connection failed, but starting server anyway:', dbError);
+      // Don't exit in serverless environment - let server start without DB
+      dbConnected = false;
     }
 
-    log('info', '✅ Database connection successful');
+    if (dbConnected) {
+      log('info', '✅ Database connection successful');
+    } else {
+      log('warn', '⚠️ Starting server without database connection');
+    }
 
     // Start the server and listen on the specified port
     const server = app.listen(PORT, () => {
