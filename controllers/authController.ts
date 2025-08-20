@@ -10,20 +10,20 @@ type AuthedRequest = Request & { user?: { id: string } };
 // POST /api/auth/register
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, userName, phone } = req.body || {};
-    if (!email || !password) {
-      return res.status(400).json({ success: false, error: 'email and password are required' });
+    const { number, userName,  } = req.body || {};
+    if (!number ) {
+      return res.status(400).json({ success: false, error: 'number and password are required' });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({ where: { number } });
     if (existing) {
-      return res.status(400).json({ success: false, error: 'email already in use' });
+      return res.status(400).json({ success: false, error: 'number already in use' });
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(number, 10);
     const user = await prisma.user.create({
-      data: { email, password: hash, userName, phone },
-      select: { id: true, email: true, userName: true, phone: true, createdAt: true }
+      data: { number, password: hash, userName },
+      select: { id: true, number: true, userName: true, phone: true, createdAt: true }
     });
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
@@ -36,21 +36,21 @@ export const register = async (req: Request, res: Response) => {
 // POST /api/auth/login
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body || {};
-    if (!email || !password) {
-      return res.status(400).json({ success: false, error: 'email and password are required' });
+    const { number } = req.body || {};
+    if (!number ) {
+      return res.status(400).json({ success: false, error: 'number and password are required' });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { number } });
     if (!user) return res.status(401).json({ success: false, error: 'invalid credentials' });
 
-    const ok = await bcrypt.compare(password, user.password);
+    const ok = await bcrypt.compare(number, user.password);
     if (!ok) return res.status(401).json({ success: false, error: 'invalid credentials' });
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     return res.json({
       success: true,
-      data: { user: { id: user.id, email: user.email, userName: user.userName }, token }
+      data: { user: { id: user.id, number: user.number, userName: user.userName }, token }
     });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: 'Failed to login', message: err.message });
@@ -65,7 +65,7 @@ export const me = async (req: AuthedRequest, res: Response) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, userName: true, phone: true, createdAt: true }
+      select: { id: true, number: true, userName: true, phone: true, createdAt: true }
     });
     if (!user) return res.status(404).json({ success: false, error: 'user not found' });
 

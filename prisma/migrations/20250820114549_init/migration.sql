@@ -19,8 +19,8 @@ CREATE TYPE "public"."ReviewStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 -- CreateTable
 CREATE TABLE "public"."users" (
     "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "number" TEXT NOT NULL,
+    "password" TEXT,
     "userName" TEXT,
     "phone" TEXT,
     "avatar" TEXT,
@@ -47,6 +47,7 @@ CREATE TABLE "public"."products" (
     "featured" BOOLEAN NOT NULL DEFAULT false,
     "status" "public"."ProductStatus" NOT NULL DEFAULT 'DRAFT',
     "publishedAt" TIMESTAMP(3),
+    "categoryId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -80,6 +81,20 @@ CREATE TABLE "public"."orders" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "orders_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."categories" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "image" TEXT,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -188,10 +203,13 @@ CREATE TABLE "public"."reviews" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");
+CREATE UNIQUE INDEX "users_number_key" ON "public"."users"("number");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "orders_orderNumber_key" ON "public"."orders"("orderNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "categories_name_key" ON "public"."categories"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "carts_userId_key" ON "public"."carts"("userId");
@@ -204,6 +222,9 @@ CREATE UNIQUE INDEX "product_variants_sku_key" ON "public"."product_variants"("s
 
 -- CreateIndex
 CREATE UNIQUE INDEX "reviews_userId_productId_key" ON "public"."reviews"("userId", "productId");
+
+-- AddForeignKey
+ALTER TABLE "public"."products" ADD CONSTRAINT "products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."orders" ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -233,7 +254,7 @@ ALTER TABLE "public"."product_variants" ADD CONSTRAINT "product_variants_product
 ALTER TABLE "public"."addresses" ADD CONSTRAINT "addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."reviews" ADD CONSTRAINT "reviews_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."reviews" ADD CONSTRAINT "reviews_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."reviews" ADD CONSTRAINT "reviews_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."reviews" ADD CONSTRAINT "reviews_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
