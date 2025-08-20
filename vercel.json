@@ -5,7 +5,8 @@
       "src": "server.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": "prisma/**"
+        "includeFiles": "prisma/**",
+        "maxLambdaSize": "50mb"
       }
     }
   ],
@@ -17,10 +18,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "server.ts": {
-      "maxDuration": 10
-    }
   }
 }
