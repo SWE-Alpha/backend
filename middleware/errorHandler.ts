@@ -1,30 +1,34 @@
 import express , { NextFunction, Request, Response } from 'express';
+
 // Error handling middleware
-const errorHandler = (err:any, req:Request, res:Response, next:NextFunction) => {
+const errorHandler = (err: any, req: Request, res: Response, next: NextFunction): void => {
   console.error(err.stack);
 
   // Prisma errors
   if (err.code === 'P2002') {
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Duplicate entry',
       message: 'A record with this information already exists'
     });
+    return;
   }
 
   if (err.code === 'P2025') {
-    return res.status(404).json({
+    res.status(404).json({
       error: 'Not found',
       message: 'The requested resource was not found'
     });
+    return;
   }
 
   // Validation errors
   if (err.name === 'ValidationError') {
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Validation Error',
       message: err.message,
-      details: err.details
+      details: err.details || []
     });
+    return;
   }
 
   // Default error
@@ -35,11 +39,11 @@ const errorHandler = (err:any, req:Request, res:Response, next:NextFunction) => 
 };
 
 // Request validation middleware
-const validateRequest = (schema) => {
-  return (req, res, next) => {
+const validateRequest = (schema: any) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const { error } = schema.validate(req.body);
     if (error) {
-      const validationError = new Error(error.details[0].message);
+      const validationError: any = new Error(error.details[0].message);
       validationError.name = 'ValidationError';
       validationError.details = error.details;
       return next(validationError);
@@ -49,8 +53,8 @@ const validateRequest = (schema) => {
 };
 
 // Async wrapper to catch errors in async route handlers
-const asyncHandler = (fn) => {
-  return (req, res, next) => {
+const asyncHandler = (fn: any) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };

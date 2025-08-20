@@ -3,6 +3,7 @@ const express = require('express');
 const testRoute = require('./routes/testRoutes');
 const apiRoutes = require('./routes/api');
 const { testConnection } = require('./utils/db');
+const { specs, swaggerUi } = require('./config/swagger');
 
 // Load environment variables from .env file
 require('dotenv').config();
@@ -15,9 +16,16 @@ const app = express();
 // Middleware to parse incoming JSON requests
 app.use(express.json());
 
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Buddies Inn API Documentation',
+}));
+
 // Root route - basic server status message
 app.get('/', (req: Request, res: Response) => {
-  res.send(`🚀 Buddies Inn Backend server running on port ${PORT}.`);
+  res.send(`🚀 Buddies Inn Backend server running on port ${PORT}.<br><a href="/api-docs">📚 View API Documentation</a>`);
 });
 
 // Mount test routes under /api/test
@@ -85,6 +93,7 @@ const startServer = async () => {
       console.log(`🚀 Server listening on port ${PORT}`);
       console.log(`🌐 Server URL: http://localhost:${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', (error as Error).message);
