@@ -4,6 +4,7 @@ const testRoute = require('./routes/testRoutes');
 const apiRoutes = require('./routes/api');
 const { testConnection } = require('./utils/db');
 const { specs, swaggerUi } = require('./config/swagger');
+const cors = require('cors');
 
 // Load environment variables from .env file
 require('dotenv').config();
@@ -30,6 +31,7 @@ log('info', `JWT Secret configured: ${!!process.env.JWT_SECRET}`);
 const app = express();
 
 // Middleware to parse incoming JSON requests
+app.use(cors());
 app.use(express.json());
 
 log('info', '✅ Express middleware configured');
