@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { string } from 'joi/lib';
 const { prisma } = require('../utils/db');
 
 type AuthedRequest = Request & { user?: { id: string } };
@@ -157,7 +158,7 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
 
     const subtotalNum = cart.items.reduce((acc:any, it:any) => acc + Number(it.price) * it.quantity, 0);
     const taxNum = 0;
-    const shippingNum = 0;
+    const shippingNum = 7;
     const discountNum = 0;
     const totalNum = subtotalNum + taxNum + shippingNum - discountNum;
 
@@ -166,10 +167,10 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
       data: {
         orderNumber: genOrderNumber(),
         userId,
-        customerName: 'Customer', // simple placeholder
+        customerName: req.body.customerName || 'User',
         subtotal: subtotalNum,
         tax: taxNum,
-        shipping: shippingNum,
+        shipping: req.body.shipping || shippingNum,
         discount: discountNum,
         total: totalNum,
         items: {

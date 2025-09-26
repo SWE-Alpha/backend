@@ -75,7 +75,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 100,
       search,
       sortBy = 'createdAt',
       sortOrder = 'desc',
