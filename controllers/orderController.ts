@@ -158,7 +158,7 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
 
     const subtotalNum = cart.items.reduce((acc:any, it:any) => acc + Number(it.price) * it.quantity, 0);
     const taxNum = 0;
-    const shippingNum = 7;
+    const shippingNum = 0;
     const discountNum = 0;
     const totalNum = subtotalNum + taxNum + shippingNum - discountNum;
 
@@ -173,6 +173,8 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
         shipping: req.body.shipping || shippingNum,
         discount: discountNum,
         total: totalNum,
+        shippingAddress: req.body.shippingAddress || {},
+        billingAddress: req.body.billingAddress || {},
         items: {
           create: cart.items.map((it:any) => ({
             productId: it.productId,
