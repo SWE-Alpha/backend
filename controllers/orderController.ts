@@ -1,3 +1,54 @@
+/**
+ * @swagger
+ * /api/admin/orders:
+ *   get:
+ *     summary: Get all orders (admin only)
+ *     description: Retrieve all orders in the system (admin access required)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Orders retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *       401:
+ *         description: Unauthorized - missing or invalid token, or not admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+// GET /api/admin/orders - all orders (admin only)
+export const getAllOrdersAdmin = async (req: AuthedRequest, res: Response) => {
+  try {
+    
+    const orders = await prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { items: true }
+    });
+
+    return res.json({ success: true, data: orders });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: 'Failed to fetch all orders', message: err.message });
+  }
+};
 import { Request, Response } from 'express';
 import { string } from 'joi/lib';
 const { prisma } = require('../utils/db');
@@ -158,7 +209,7 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
 
     const subtotalNum = cart.items.reduce((acc:any, it:any) => acc + Number(it.price) * it.quantity, 0);
     const taxNum = 0;
-    const shippingNum = 7;
+    const shippingNum = 0;
     const discountNum = 0;
     const totalNum = subtotalNum + taxNum + shippingNum - discountNum;
 
@@ -173,6 +224,8 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
         shipping: req.body.shipping || shippingNum,
         discount: discountNum,
         total: totalNum,
+        shippingAddress: req.body.shippingAddress || {},
+        billingAddress: req.body.billingAddress || {},
         items: {
           create: cart.items.map((it:any) => ({
             productId: it.productId,
