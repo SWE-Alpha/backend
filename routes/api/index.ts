@@ -7,6 +7,7 @@ import authRoutes from './auth';
 import reviewRoutes from './reviews';
 import categoryRoutes from './categories';
 import usersRouter from './users';
+import adminOrdersRouter from './adminOrders';
 
 const router = express.Router();
 
@@ -72,5 +73,6 @@ router.use('/auth', authRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/users', usersRouter);
+router.use('/admin/orders', adminOrdersRouter);
 
 module.exports = router;
