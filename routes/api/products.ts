@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllProducts, getProductById, createProduct } from '../../controllers/productController';
+import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct } from '../../controllers/productController';
 import { getProductReviews, createReview } from '../../controllers/reviewContoller';
 import { authenticate } from '../../middleware/auth';
 
@@ -13,6 +13,12 @@ router.get('/:id', getProductById);
 
 // POST /api/products - Create new product (Admin only)
 router.post('/', createProduct);
+
+// PUT /api/products/:id - Update product (Admin only)
+router.put('/:id', authenticate, updateProduct);
+
+// DELETE /api/products/:id - Delete product (Admin only)
+router.delete('/:id', authenticate, deleteProduct);
 
 // Product Reviews
 // GET /api/products/:productId/reviews - public
