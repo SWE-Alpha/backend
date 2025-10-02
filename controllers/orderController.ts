@@ -208,9 +208,9 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
     }
 
     const subtotalNum = cart.items.reduce((acc:any, it:any) => acc + Number(it.price) * it.quantity, 0);
-    const taxNum = 0;
-    const shippingNum = 0;
-    const discountNum = 0;
+    const taxNum = req.body.tax || 0;
+    const shippingNum = req.body.shipping || 0;
+    const discountNum = req.body.discount || 0;
     const totalNum = subtotalNum + taxNum + shippingNum - discountNum;
 
     // Create order with items
@@ -221,7 +221,7 @@ export const createOrder = async (req: AuthedRequest, res: Response) => {
         customerName: req.body.customerName || 'User',
         subtotal: subtotalNum,
         tax: taxNum,
-        shipping: req.body.shipping || shippingNum,
+        shipping: shippingNum,
         discount: discountNum,
         total: totalNum,
         shippingAddress: req.body.shippingAddress || {},
